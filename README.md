@@ -34,3 +34,13 @@ The following OPTIONS are allowed before a command (thought they don't always do
 - `--backup/-b` will run `aim backup` before the command
 - `--quiet/-q` will hide all stdout/stderr
 - `--help/-h` will show usage information
+
+## Build
+
+Dependencies:
+
+- curl
+- g++
+- GNU Make
+
+Run `make RELEASE=1 -j$(nproc)`

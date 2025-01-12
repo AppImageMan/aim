@@ -4,6 +4,8 @@
 #include <string>
 #include <variant>
 #include <args.hpp>
+#include <pkg.hpp>
+#include <cmd.hpp>
 
 int main(int argc, char **argv) {
     const auto cliArgRes = args::parse(argc, argv);
@@ -41,9 +43,7 @@ int main(int argc, char **argv) {
             return 1;
             break;
         case args::Command::Available:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
-            break;
+            return cmd::available(cliArgs);
         case args::Command::Backup:
             std::cerr << "Not implemented!" << std::endl;
             return 1;

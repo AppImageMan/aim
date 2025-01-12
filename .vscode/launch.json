@@ -5,12 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "Debug Cmd Available",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/aim",
             "preLaunchTask": "build",
-            "args": [ ],
+            "args": [
+                "available"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
