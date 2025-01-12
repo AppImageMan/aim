@@ -7,4 +7,5 @@
 
 namespace cmd {
     int available(const args::Args &cliArgs);
+    int install(const args::Args &cliArgs);
 }

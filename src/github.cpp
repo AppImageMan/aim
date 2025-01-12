@@ -6,6 +6,7 @@
 #include <optional>
 #include <variant>
 #include <memory>
+#include <filesystem>
 #include <iostream>
 #include <github.hpp>
 
@@ -13,13 +14,14 @@ using namespace git;
 
 #define AIL_REPO        "https://github.com/AppImageMan/ail"
 #define AIL_RAW         "https://raw.githubusercontent.com/AppImageMan/ail"
+#define AIL_LFS         "https://media.githubusercontent.com/media/AppImageMan/ail"
 
 static std::optional<std::vector<std::string>> execCliCmd(const std::string &cmd);
 static std::string trimStr(const std::string &ln);
 
 std::variant<std::vector<Ref>, std::string> git::fetchAilRefs() {
     std::stringstream gitCmd;
-    gitCmd << "git ls-remote --heads " << AIL_REPO;
+    gitCmd << "git ls-remote --heads '" << AIL_REPO << '\'';
     const auto cmdOutRes = execCliCmd(gitCmd.str());
     if (!cmdOutRes.has_value()) {
         return "Failed to fetch app list";
@@ -42,7 +44,7 @@ std::variant<std::vector<Ref>, std::string> git::fetchAilRefs() {
 
 std::string git::metadataVal(const std::string &commit, const std::string &fileName) {
     std::stringstream curlCmd;
-    curlCmd << "curl -s " << AIL_RAW << '/' << commit << '/' << fileName;
+    curlCmd << "curl -s '" << AIL_RAW << '/' << commit << '/' << fileName << '\'';
     const auto cmdOutRes = execCliCmd(curlCmd.str());
     if (!cmdOutRes.has_value() || cmdOutRes.value().size() != 1
             || cmdOutRes.value()[0] == "404: Not Found") {
@@ -54,6 +56,23 @@ std::string git::metadataVal(const std::string &commit, const std::string &fileN
     std::stringstream ret;
     ret << "<" << cmdOutLns[0] << ">";
     return ret.str();
+}
+
+std::optional<std::string> git::dloadLfsFile(
+        const std::string &commit, const std::string &fileName,
+        const std::string &output, const bool isQuiet) {
+    std::stringstream curlCmd;
+    curlCmd
+        << "curl -L" << (isQuiet ? "s '" : " '")
+        << AIL_LFS << '/' << commit << '/' << fileName << "?download=true' -o "
+        << output;
+    const auto cmdOutRes = execCliCmd(curlCmd.str());
+    if (!cmdOutRes.has_value()) {
+        std::stringstream errMsg;
+        errMsg << "Curl failed to download '" << fileName << "' on commit '" << commit << "'";
+        return errMsg.str();
+    }
+    return std::nullopt;
 }
 
 static std::optional<std::vector<std::string>> execCliCmd(const std::string &cmd) {

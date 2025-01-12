@@ -40,6 +40,7 @@ The following OPTIONS are allowed before a command (thought they don't always do
 Dependencies:
 
 - curl
+- git
 - g++
 - GNU Make
 

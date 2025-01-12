@@ -23,9 +23,7 @@ int main(int argc, char **argv) {
     const auto cliArgs = std::get<args::Args>(cliArgRes);
     switch (cliArgs.cmd) {
         case args::Command::Install:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
-            break;
+            return cmd::install(cliArgs);
         case args::Command::Remove:
             std::cerr << "Not implemented!" << std::endl;
             return 1;

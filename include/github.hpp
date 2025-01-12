@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 #include <variant>
 
 namespace git {
@@ -13,4 +14,8 @@ namespace git {
     };
     std::variant<std::vector<Ref>, std::string> fetchAilRefs();
     std::string metadataVal(const std::string &commit, const std::string &fileName);
+    std::optional<std::string> dloadLfsFile(
+        const std::string &commit, const std::string &fileName,
+        const std::string &output, const bool isQuiet
+    );
 }
