@@ -4,9 +4,114 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "buildDocker",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "build",
+                "-t",
+                "aim-dev",
+                "."
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "stopDocker",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "stop",
+                "aim-dev"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "startDocker",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "--name",
+                "aim-dev",
+                "--cpus=16",
+                "-v",
+                "${PWD}:/realworld",
+                "-d",
+                "aim-dev",
+                "tail",
+                "-f",
+                "/dev/null"
+            ],
+            "dependsOn": [
+                "buildDocker"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "dockerRmOldSrc",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "exec",
+                "aim-dev",
+                "rm",
+                "-rf",
+                "/home/dev/src/*",
+                "||",
+                "true"
+            ]
+        },
+        {
+            "label": "dockerCopySrc",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "exec",
+                "aim-dev",
+                "cp",
+                "-r",
+                "/realworld/src",
+                "/realworld/include",
+                "/realworld/Makefile",
+                "/realworld/aim.desktop",
+                "/realworld/aim.svg",
+                "/home/dev/src/"
+            ],
+            "dependsOn": [
+                "dockerRmOldSrc"
+            ]
+        },
+        {
             "label": "build",
             "type": "shell",
-            "command": "make -j$(nproc)"
+            "command": "docker",
+            "args": [
+                "exec",
+                "aim-dev",
+                "make",
+                "-j16"
+            ],
+            "dependsOn": [
+                "dockerCopySrc"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "publish",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "exec",
+                "aim-dev",
+                "make",
+                "RELEASE=1",
+                "-j16"
+            ],
+            "dependsOn": [
+                "dockerCopySrc"
+            ],
+            "problemMatcher": []
         }
     ]
 }

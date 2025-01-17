@@ -5,19 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Cmd Available",
+            "name": "(gdb) Launch 'available' in Docker",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/aim",
+            "program": "/home/dev/src/aim",
             "preLaunchTask": "build",
             "args": [
                 "available"
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "/home/dev/src",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "pipeTransport": {
+                "debuggerPath": "gdb",
+                "pipeProgram": "docker",
+                "pipeArgs": [
+                    "exec", "-i", "aim-dev"
+                ],
+                "pipeCwd": "${workspaceFolder}",
+                "quoteArgs": false
+            },
+            "sourceFileMap": {
+                "/home/dev/src": "${workspaceFolder}"
+            },
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -30,22 +42,34 @@
                     "ignoreFailures": true
                 }
             ]
-        }, 
+        },
         {
-            "name": "Debug Cmd Install",
+            "name": "(gdb) Launch 'install librewolf' in Docker",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/aim",
+            "program": "/home/dev/src/aim",
             "preLaunchTask": "build",
             "args": [
                 "install",
                 "librewolf"
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "/home/dev/src",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "pipeTransport": {
+                "debuggerPath": "gdb",
+                "pipeProgram": "docker",
+                "pipeArgs": [
+                    "exec", "-i", "aim-dev"
+                ],
+                "pipeCwd": "${workspaceFolder}",
+                "quoteArgs": false
+            },
+            "sourceFileMap": {
+                "/home/dev/src": "${workspaceFolder}"
+            },
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

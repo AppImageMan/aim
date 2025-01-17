@@ -4,3 +4,7 @@
 
 # Bin
 aim
+
+# AppImage
+squashfs-system/
+*.AppImage
