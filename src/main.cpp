@@ -29,9 +29,6 @@ int main(int argc, char **argv) {
         case args::Command::Upgrade:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-        case args::Command::List:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
         case args::Command::Run:
             std::cerr << "Not implemented!" << std::endl;
             return 1;

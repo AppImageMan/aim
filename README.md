@@ -17,8 +17,6 @@ The AppImage Manager is a command line tool which accepts the following commands
    + Removes a package from your system
 - `aim [OPTIONS] upgrade`
    + Attempts to upgrade your AppImages
-- `aim [OPTIONS] list`
-   + Lists installed packages
 - `aim [OPTIONS] run PACKAGE`
    + Launch a package
 - `aim [OPTIONS] available`
@@ -34,6 +32,8 @@ The following OPTIONS are allowed before a command (thought they don't always do
 - `--backup/-b` will run `aim backup` before the command
 - `--quiet/-q` will hide all stdout/stderr
 - `--help/-h` will show usage information
+
+NOTE: AIM doesn't support listing installed packages as that can simply be done via `ls ~/Applications`
 
 ## Build
 
