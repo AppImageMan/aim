@@ -25,31 +25,24 @@ int main(int argc, char **argv) {
         case args::Command::Install:
             return cmd::install(cliArgs);
         case args::Command::Remove:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
-            break;
+            return cmd::remove(cliArgs);
         case args::Command::Upgrade:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-            break;
         case args::Command::List:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-            break;
         case args::Command::Run:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-            break;
         case args::Command::Available:
             return cmd::available(cliArgs);
         case args::Command::Backup:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-            break;
         case args::Command::Restore:
             std::cerr << "Not implemented!" << std::endl;
             return 1;
-            break;
     }
     return 0;
 }
