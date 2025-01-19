@@ -39,9 +39,16 @@ NOTE: AIM doesn't support listing installed packages as that can simply be done 
 
 Dependencies:
 
-- curl
-- git
-- g++
-- GNU Make
+- Docker
 
-Run `make RELEASE=1 -j$(nproc)`
+```bash
+docker build -t aim-dev .
+docker run --rm --name aim-dev --cpus=$(nproc) -v ${PWD}:/realworld -d aim-dev tail -f /dev/null
+docker exec aim-dev cp -r \
+    /realworld/src /realworld/include /realworld/Makefile /realworld/examples \
+    /realworld/aim.desktop /realworld/aim.svg \
+    /home/dev/src/
+docker exec aim-dev make RELEASE=1 -j$(nproc)
+docker stop aim-dev
+docker rmi aim-dev
+```
