@@ -30,8 +30,7 @@ int main(int argc, char **argv) {
             std::cerr << "Not implemented!" << std::endl;
             return 1;
         case args::Command::Run:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
+            return cmd::run(cliArgs);
         case args::Command::Available:
             return cmd::available(cliArgs);
         case args::Command::Backup:

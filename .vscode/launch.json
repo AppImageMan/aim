@@ -82,6 +82,46 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "(gdb) Launch 'run librewolf' in Docker",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/dev/src/aim",
+            "preLaunchTask": "build",
+            "args": [
+                "run",
+                "librewolf"
+            ],
+            "stopAtEntry": false,
+            "cwd": "/home/dev/src",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "pipeTransport": {
+                "debuggerPath": "gdb",
+                "pipeProgram": "docker",
+                "pipeArgs": [
+                    "exec", "-i", "aim-dev"
+                ],
+                "pipeCwd": "${workspaceFolder}",
+                "quoteArgs": false
+            },
+            "sourceFileMap": {
+                "/home/dev/src": "${workspaceFolder}"
+            },
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }

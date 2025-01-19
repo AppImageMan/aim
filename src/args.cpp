@@ -43,8 +43,6 @@ std::variant<Args, std::string> args::parse(int argc, char **argv) {
         cmd = Command::Remove;
     } else if (cmdStr == "upgrade") {
         cmd = Command::Upgrade;
-    } else if (cmdStr == "list") {
-        cmd = Command::List;
     } else if (cmdStr == "run") {
         cmd = Command::Run;
     } else if (cmdStr == "available") {
@@ -90,7 +88,6 @@ void args::printUsage() {
         << "    install             Installs a package" << std::endl
         << "    remove              Removes a package" << std::endl
         << "    upgrade             Upgrade your packages" << std::endl
-        << "    list                List installed packages" << std::endl
         << "    run                 Run installed package" << std::endl
         << "    available           List all available packages" << std::endl
         << "    backup              Create a backup of your packages" << std::endl

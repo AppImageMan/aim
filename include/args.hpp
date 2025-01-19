@@ -19,7 +19,6 @@ namespace args {
         Install,
         Remove,
         Upgrade,
-        List,
         Run,
         Available,
         Backup,

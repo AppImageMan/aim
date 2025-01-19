@@ -128,7 +128,9 @@ int cmd::install(const args::Args &cliArgs) {
         }
         return 1;
     }
-    return 0;
+    std::stringstream setExec;
+    setExec << "chmod +x " << fileName.str();
+    return system(setExec.str().c_str());
 }
 
 int cmd::remove(const args::Args &cliArgs) {
@@ -194,6 +196,73 @@ int cmd::remove(const args::Args &cliArgs) {
         }
     } catch(...) {
         // Assume not installed
+        if (!cliArgs.opt.quiet) {
+            std::cerr
+                << "Failed to remove '" << pkgName << ".' Are you sure it's installed?"
+                << std::endl;
+        }
+        return 1;
+    }
+    if (!cliArgs.opt.quiet) {
+        std::cerr
+            << "Couldn't find package '" << pkgName << ".' Are you sure it's installed?"
+            << std::endl;
+    }
+    return 1;
+}
+
+int cmd::run(const args::Args &cliArgs) {
+    if (!cliArgs.pkg.has_value()) {
+        if (!cliArgs.opt.quiet) {
+            std::cerr << "Error: No package provided, but 'run' requires one." << std::endl;
+        }
+        return 1;
+    }
+    const auto pkgName = cliArgs.pkg.value();
+
+    // Make sure ~/Applications exists
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
+    if (!std::filesystem::exists(path.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "No such ~/Applications!" << std::endl;
+        }
+        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
+            std::cout << "Created ~/Applications" << std::endl;
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr <<  "Failed to create ~/Applications";
+            }
+            return 1;
+        }
+    }
+
+    // Check if already installed
+    const auto extension = std::string(".AppImage");
+    try {
+        for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
+            const auto fileName = entry.path().filename().string();
+            if (strncmp(fileName.c_str(), pkgName.c_str(), pkgName.length()) == 0
+                    && fileName.length() > extension.length()
+                    && fileName.substr(fileName.length() - extension.length()) == extension) {
+                // Found an installed version
+                if (!cliArgs.opt.quiet) {
+                    std::cout
+                        << "Found application '" << pkgName << "' - '"
+                        << fileName << "'."
+                        << std::endl;
+                }
+
+                // TODO: Ask before removal if told to
+                // TODO: Implement backup
+
+                if (!cliArgs.opt.quiet) {
+                    std::cout << "Starting..." << std::endl;
+                }
+                return system(entry.path().c_str());
+            }
+        }
+    } catch(...) {
         if (!cliArgs.opt.quiet) {
             std::cerr
                 << "Failed to remove '" << pkgName << ".' Are you sure it's installed?"
