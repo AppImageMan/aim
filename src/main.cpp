@@ -27,8 +27,7 @@ int main(int argc, char **argv) {
         case args::Command::Remove:
             return cmd::remove(cliArgs);
         case args::Command::Upgrade:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
+            return cmd::upgrade(cliArgs);
         case args::Command::Run:
             return cmd::run(cliArgs);
         case args::Command::Available:

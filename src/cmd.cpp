@@ -7,6 +7,7 @@
 #include <optional>
 #include <vector>
 #include <string>
+#include <regex>
 #include <algorithm>
 #include <filesystem>
 #include <pkg.hpp>
@@ -209,6 +210,126 @@ int cmd::remove(const args::Args &cliArgs) {
             << std::endl;
     }
     return 1;
+}
+
+int cmd::upgrade(const args::Args &cliArgs) {
+    // Make sure ~/Applications exists
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
+    if (!std::filesystem::exists(path.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "No such ~/Applications!" << std::endl;
+        }
+        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
+            std::cout << "Created ~/Applications" << std::endl;
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr <<  "Failed to create ~/Applications";
+            }
+            return 1;
+        }
+    }
+
+    // Get the available apps
+    const auto pkgsRes = pkg::findAll();
+    if (std::holds_alternative<std::string>(pkgsRes)) {
+        const auto errMsg = std::get<std::string>(pkgsRes);
+        std::cerr << "Error: " << errMsg << std::endl;
+        return 1;
+    }
+    const auto pkgs = std::get<std::vector<pkg::Pkg>>(pkgsRes);
+    std::vector<std::string> pkgNames;
+    pkgNames.reserve(pkgs.size());
+    for (const auto &pkg : pkgs) {
+        pkgNames.push_back(pkg.name);
+    }
+
+    // TODO: Add backup
+
+    // Check if already installed
+    const auto extension = std::string(".AppImage");
+    std::regex pkgNamePattern(R"(^([a-zA-Z0-9_-]+)-(\d+\.\d+\.\d+)\.AppImage$)");
+    try {
+        for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
+            const auto fileName = entry.path().filename().string();
+            std::smatch pkgNameMatch;
+            if (!std::regex_match(fileName, pkgNameMatch, pkgNamePattern)) {
+                continue;
+            }
+            if (pkgNameMatch.size() != 3) {
+                continue;
+            }
+            const auto pkgName = pkgNameMatch[1];
+            const auto versStr = pkgNameMatch[2];
+            auto pkgNameIt = std::find(pkgNames.begin(), pkgNames.end(), pkgName);
+            if (fileName.length() > extension.length()
+                    && fileName.substr(fileName.length() - extension.length()) == extension
+                    && pkgNameIt != pkgNames.end()) {
+                const auto pkgIt = (pkgNameIt - pkgNames.begin()) + pkgs.begin();
+                if (pkgIt->latestVers == versStr) {
+                    if (!cliArgs.opt.quiet) {
+                        std::cout
+                            << "Skipping '" << pkgName << "' as it is already up to date."
+                            << std::endl;
+                    }
+                    continue;
+                }
+
+                // TODO: Ask before upgrading
+
+                if (!cliArgs.opt.quiet) {
+                    std::cout
+                        << "Upgrading '" << pkgName
+                        << "' from version " << versStr << " to version " << pkgIt->latestVers
+                        << std::endl;
+                }
+
+                if (std::remove(entry.path().c_str()) == 0) {
+                    if (!cliArgs.opt.quiet) {
+                        std::cout << "Successfully removed package." << std::endl;
+                    }
+                } else {
+                    if (!cliArgs.opt.quiet) {
+                        std::cerr << "Failed to remove package." << std::endl;
+                    }
+                    return 1;
+                }
+
+                // Download
+                if (!cliArgs.opt.quiet) {
+                    std::cout
+                        << "Downloading " << pkgIt->name << " version "
+                        << pkgIt->latestVers << "..."
+                        << std::endl;
+                }
+                std::stringstream fileName;
+                fileName
+                    << "~/Applications/" << pkgIt->name << "-" << pkgIt->latestVers << ".AppImage";
+                const auto err = git::dloadLfsFile(
+                    pkgIt->latestCommit, "application.AppImage", fileName.str(),
+                    cliArgs.opt.quiet
+                );
+                if (err.has_value()) {
+                    if (!cliArgs.opt.quiet) {
+                        std::cerr << "Error downloading file: " << err.value() << std::endl;
+                    }
+                    return 1;
+                }
+                std::stringstream setExec;
+                setExec << "chmod +x " << fileName.str();
+                int success = system(setExec.str().c_str());
+                if (success != 0) {
+                    if (!cliArgs.opt.quiet) {
+                        std::cerr << "Failed to set app to excutable!" << std::endl;
+                    }
+                    return 1;
+                }
+            }
+        }
+    } catch(...) {
+        // Assume not installed
+    }
+    return 0;
 }
 
 int cmd::run(const args::Args &cliArgs) {
