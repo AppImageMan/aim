@@ -17,8 +17,11 @@
 
 using namespace cmd;
 
+static void ensureAppFldr(const args::Args &cliArgs);
+static void rmBackup(const args::Args &cliArgs);
+static void makeBackup(const args::Args &cliArgs);
+
 int cmd::available(const args::Args &cliArgs) {
-    // TODO: Implement backup option
     if (cliArgs.opt.quiet) {
         // This command only prints stuff, so after backup, if they said quiet, don't print lol
         return 0;
@@ -50,24 +53,16 @@ int cmd::install(const args::Args &cliArgs) {
     const auto pkgName = cliArgs.pkg.value();
 
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     // Check if already installed
     const auto extension = std::string(".AppImage");
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
     try {
         for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
             const auto fileName = entry.path().filename().string();
@@ -111,27 +106,10 @@ int cmd::install(const args::Args &cliArgs) {
     // TODO: Ask before installing
 
     if (cliArgs.opt.backup) {
-        std::stringstream backupPath;
-        backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
-        if (std::remove(backupPath.str().c_str()) == 0) {
-            if (!cliArgs.opt.quiet) {
-                std::cout << "Removed old backup." << std::endl;
-            }
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr << "Failed to remove old backup." << std::endl;
-            }
-            return 1;
-        }
-        std::stringstream tarCmd;
-        tarCmd
-            << "tar cvfz "
-            << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz "
-            << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
-        if (system(tarCmd.str().c_str()) != 0) {
-            if (!cliArgs.opt.quiet) {
-                std::cerr << "Failed to make backup!" << std::endl;
-            }
+        try {
+            rmBackup(cliArgs);
+            makeBackup(cliArgs);
+        } catch (...) {
             return 1;
         }
     }
@@ -169,24 +147,16 @@ int cmd::remove(const args::Args &cliArgs) {
     const auto pkgName = cliArgs.pkg.value();
 
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     // Check if already installed
     const auto extension = std::string(".AppImage");
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
     try {
         for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
             const auto fileName = entry.path().filename().string();
@@ -204,27 +174,10 @@ int cmd::remove(const args::Args &cliArgs) {
                 // TODO: Ask before removal if told to
 
                 if (cliArgs.opt.backup) {
-                    std::stringstream backupPath;
-                    backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
-                    if (std::remove(backupPath.str().c_str()) == 0) {
-                        if (!cliArgs.opt.quiet) {
-                            std::cout << "Removed old backup." << std::endl;
-                        }
-                    } else {
-                        if (!cliArgs.opt.quiet) {
-                            std::cerr << "Failed to remove old backup." << std::endl;
-                        }
-                        return 1;
-                    }
-                    std::stringstream tarCmd;
-                    tarCmd
-                        << "tar cvfz "
-                        << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz"
-                        << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
-                    if (system(tarCmd.str().c_str()) != 0) {
-                        if (!cliArgs.opt.quiet) {
-                            std::cerr << "Failed to make backup!" << std::endl;
-                        }
+                    try {
+                        rmBackup(cliArgs);
+                        makeBackup(cliArgs);
+                    } catch (...) {
                         return 1;
                     }
                 }
@@ -264,20 +217,10 @@ int cmd::remove(const args::Args &cliArgs) {
 
 int cmd::upgrade(const args::Args &cliArgs) {
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     // Get the available apps
@@ -295,33 +238,18 @@ int cmd::upgrade(const args::Args &cliArgs) {
     }
 
     if (cliArgs.opt.backup) {
-        std::stringstream backupPath;
-        backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
-        if (std::remove(backupPath.str().c_str()) == 0) {
-            if (!cliArgs.opt.quiet) {
-                std::cout << "Removed old backup." << std::endl;
-            }
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr << "Failed to remove old backup." << std::endl;
-            }
-            return 1;
-        }
-        std::stringstream tarCmd;
-        tarCmd
-            << "tar cvfz "
-            << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz "
-            << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
-        if (system(tarCmd.str().c_str()) != 0) {
-            if (!cliArgs.opt.quiet) {
-                std::cerr << "Failed to make backup!" << std::endl;
-            }
+        try {
+            rmBackup(cliArgs);
+            makeBackup(cliArgs);
+        } catch (...) {
             return 1;
         }
     }
 
     // Check if already installed
     const auto extension = std::string(".AppImage");
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
     std::regex pkgNamePattern(R"(^([a-zA-Z0-9_-]+)-(\d+\.\d+\.\d+)\.AppImage$)");
     try {
         for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
@@ -416,24 +344,16 @@ int cmd::run(const args::Args &cliArgs) {
     const auto pkgName = cliArgs.pkg.value();
 
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     // Check if already installed
     const auto extension = std::string(".AppImage");
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
     try {
         for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
             const auto fileName = entry.path().filename().string();
@@ -472,65 +392,37 @@ int cmd::run(const args::Args &cliArgs) {
 
 int cmd::backup(const args::Args &cliArgs) {
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     // TODO: Ask before making backup
 
-    std::stringstream backupPath;
-    backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
-    if (std::remove(backupPath.str().c_str()) == 0) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "Removed old backup." << std::endl;
-        }
-    } else {
-        if (!cliArgs.opt.quiet) {
-            std::cerr << "Failed to remove old backup." << std::endl;
-        }
+    try {
+        rmBackup(cliArgs);
+        makeBackup(cliArgs);
+    } catch (...) {
         return 1;
     }
-    std::stringstream tarCmd;
-    tarCmd
-        << "tar cvfz " << backupPath.str() << " "
-        << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
-    return system(tarCmd.str().c_str());
+    return 0;
 }
 
 int cmd::restore(const args::Args &cliArgs) {
     // Make sure ~/Applications exists
-    std::stringstream path;
-    path << std::string(std::getenv("HOME")) << "/Applications";
-    if (!std::filesystem::exists(path.str())) {
-        if (!cliArgs.opt.quiet) {
-            std::cout << "No such ~/Applications!" << std::endl;
-        }
-        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
-            std::cout << "Created ~/Applications" << std::endl;
-        } else {
-            if (!cliArgs.opt.quiet) {
-                std::cerr <<  "Failed to create ~/Applications";
-            }
-            return 1;
-        }
+    try {
+        ensureAppFldr(cliArgs);
+    } catch (...) {
+        return 1;
     }
 
     if (!cliArgs.opt.quiet) {
         std::cout << "Removing old packages..." << std::endl;
     }
     const auto extension = std::string(".AppImage");
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
     try {
         for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
             const auto fileName = entry.path().filename().string();
@@ -571,4 +463,53 @@ int cmd::restore(const args::Args &cliArgs) {
     std::stringstream tarCmd;
     tarCmd << "tar xzfv " << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz -C /";
     return system(tarCmd.str().c_str());
+}
+
+static void ensureAppFldr(const args::Args &cliArgs) {
+    // Make sure ~/Applications exists
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
+    if (!std::filesystem::exists(path.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "No such ~/Applications!" << std::endl;
+        }
+        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
+            std::cout << "Created ~/Applications" << std::endl;
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr <<  "Failed to create ~/Applications";
+            }
+            throw std::exception();
+        }
+    }
+}
+
+static void rmBackup(const args::Args &cliArgs) {
+    std::stringstream backupPath;
+    backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
+    if (std::remove(backupPath.str().c_str()) == 0) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "Removed old backup." << std::endl;
+        }
+    } else if (std::filesystem::exists(backupPath.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cerr << "Failed to remove old backup." << std::endl;
+        }
+        throw std::exception();
+    }
+}
+
+static void makeBackup(const args::Args &cliArgs) {
+    std::stringstream tarCmd;
+    tarCmd
+        << "tar cvfz "
+        << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz "
+        << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
+    if (system(tarCmd.str().c_str()) != 0) {
+        if (!cliArgs.opt.quiet) {
+            std::cerr << "Failed to make backup!" << std::endl;
+        }
+        throw std::exception();
+    }
+    std::cout << "Created backup at ~/.aim-backup.tar.gz" << std::endl;
 }

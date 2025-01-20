@@ -48,7 +48,7 @@ docker exec aim-dev cp -r \
     /realworld/src /realworld/include /realworld/Makefile /realworld/examples \
     /realworld/aim.desktop /realworld/aim.svg \
     /home/dev/src/
-docker exec aim-dev make RELEASE=1 -j$(nproc)
+docker exec aim-dev make RELEASE=1
 docker stop aim-dev
 docker rmi aim-dev
 ```
