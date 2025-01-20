@@ -20,6 +20,7 @@ using namespace cmd;
 static void ensureAppFldr(const args::Args &cliArgs);
 static void rmBackup(const args::Args &cliArgs);
 static void makeBackup(const args::Args &cliArgs);
+static bool asked(const args::Args &cliArgs);
 
 int cmd::available(const args::Args &cliArgs) {
     if (cliArgs.opt.quiet) {
@@ -103,7 +104,12 @@ int cmd::install(const args::Args &cliArgs) {
         return 1;
     }
 
-    // TODO: Ask before installing
+    if (!cliArgs.opt.quiet) {
+        std::cout << "Installing " << pkgName << "..." << std::endl;
+    }
+    if (!asked(cliArgs)) {
+        return 0;
+    }
 
     if (cliArgs.opt.backup) {
         try {
@@ -171,7 +177,12 @@ int cmd::remove(const args::Args &cliArgs) {
                         << std::endl;
                 }
 
-                // TODO: Ask before removal if told to
+                if (!cliArgs.opt.quiet) {
+                    std::cout << "Removing " << pkgName << "..." << std::endl;
+                }
+                if (!asked(cliArgs)) {
+                    return 0;
+                }
 
                 if (cliArgs.opt.backup) {
                     try {
@@ -277,7 +288,12 @@ int cmd::upgrade(const args::Args &cliArgs) {
                     continue;
                 }
 
-                // TODO: Ask before upgrading
+                if (!cliArgs.opt.quiet) {
+                    std::cout << "Upgrading " << pkgName << "..." << std::endl;
+                }
+                if (!asked(cliArgs)) {
+                    continue;
+                }
 
                 if (!cliArgs.opt.quiet) {
                     std::cout
@@ -398,7 +414,12 @@ int cmd::backup(const args::Args &cliArgs) {
         return 1;
     }
 
-    // TODO: Ask before making backup
+    if (!cliArgs.opt.quiet) {
+        std::cout << "Backing up..." << std::endl;
+    }
+    if (!asked(cliArgs)) {
+        return 0;
+    }
 
     try {
         rmBackup(cliArgs);
@@ -436,7 +457,12 @@ int cmd::restore(const args::Args &cliArgs) {
                         << std::endl;
                 }
 
-                // TODO: Ask before removal if told to
+                if (!cliArgs.opt.quiet) {
+                    std::cout << "Removing " << fileName << "..." << std::endl;
+                }
+                if (!asked(cliArgs)) {
+                    return 0;
+                }
 
                 if (!cliArgs.opt.quiet) {
                     std::cout << "Removing..." << std::endl;
@@ -512,4 +538,19 @@ static void makeBackup(const args::Args &cliArgs) {
         throw std::exception();
     }
     std::cout << "Created backup at ~/.aim-backup.tar.gz" << std::endl;
+}
+
+static bool asked(const args::Args &cliArgs) {
+    if (!cliArgs.opt.ask) {
+        // Skip ask if the user didn't add the tag
+        return true;
+    }
+    std::cout << "Do you want to perform this action? (yes/no):";
+    std::string input;
+    std::cin >> input;
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+    if (input == "y" || input == "yes") {
+        return true;
+    }
+    return false;
 }
