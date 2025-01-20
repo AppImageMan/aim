@@ -33,11 +33,9 @@ int main(int argc, char **argv) {
         case args::Command::Available:
             return cmd::available(cliArgs);
         case args::Command::Backup:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
+            return cmd::backup(cliArgs);
         case args::Command::Restore:
-            std::cerr << "Not implemented!" << std::endl;
-            return 1;
+            return cmd::restore(cliArgs);
     }
     return 0;
 }

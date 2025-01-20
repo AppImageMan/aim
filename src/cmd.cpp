@@ -109,7 +109,32 @@ int cmd::install(const args::Args &cliArgs) {
     }
 
     // TODO: Ask before installing
-    // TODO: Implement backup option (run after we make sure package exists)
+
+    if (cliArgs.opt.backup) {
+        std::stringstream backupPath;
+        backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
+        if (std::remove(backupPath.str().c_str()) == 0) {
+            if (!cliArgs.opt.quiet) {
+                std::cout << "Removed old backup." << std::endl;
+            }
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr << "Failed to remove old backup." << std::endl;
+            }
+            return 1;
+        }
+        std::stringstream tarCmd;
+        tarCmd
+            << "tar cvfz "
+            << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz "
+            << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
+        if (system(tarCmd.str().c_str()) != 0) {
+            if (!cliArgs.opt.quiet) {
+                std::cerr << "Failed to make backup!" << std::endl;
+            }
+            return 1;
+        }
+    }
 
     // Download
     if (!cliArgs.opt.quiet) {
@@ -177,7 +202,32 @@ int cmd::remove(const args::Args &cliArgs) {
                 }
 
                 // TODO: Ask before removal if told to
-                // TODO: Implement backup
+
+                if (cliArgs.opt.backup) {
+                    std::stringstream backupPath;
+                    backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
+                    if (std::remove(backupPath.str().c_str()) == 0) {
+                        if (!cliArgs.opt.quiet) {
+                            std::cout << "Removed old backup." << std::endl;
+                        }
+                    } else {
+                        if (!cliArgs.opt.quiet) {
+                            std::cerr << "Failed to remove old backup." << std::endl;
+                        }
+                        return 1;
+                    }
+                    std::stringstream tarCmd;
+                    tarCmd
+                        << "tar cvfz "
+                        << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz"
+                        << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
+                    if (system(tarCmd.str().c_str()) != 0) {
+                        if (!cliArgs.opt.quiet) {
+                            std::cerr << "Failed to make backup!" << std::endl;
+                        }
+                        return 1;
+                    }
+                }
 
                 if (!cliArgs.opt.quiet) {
                     std::cout << "Removing..." << std::endl;
@@ -244,7 +294,31 @@ int cmd::upgrade(const args::Args &cliArgs) {
         pkgNames.push_back(pkg.name);
     }
 
-    // TODO: Add backup
+    if (cliArgs.opt.backup) {
+        std::stringstream backupPath;
+        backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
+        if (std::remove(backupPath.str().c_str()) == 0) {
+            if (!cliArgs.opt.quiet) {
+                std::cout << "Removed old backup." << std::endl;
+            }
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr << "Failed to remove old backup." << std::endl;
+            }
+            return 1;
+        }
+        std::stringstream tarCmd;
+        tarCmd
+            << "tar cvfz "
+            << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz "
+            << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
+        if (system(tarCmd.str().c_str()) != 0) {
+            if (!cliArgs.opt.quiet) {
+                std::cerr << "Failed to make backup!" << std::endl;
+            }
+            return 1;
+        }
+    }
 
     // Check if already installed
     const auto extension = std::string(".AppImage");
@@ -374,9 +448,6 @@ int cmd::run(const args::Args &cliArgs) {
                         << std::endl;
                 }
 
-                // TODO: Ask before removal if told to
-                // TODO: Implement backup
-
                 if (!cliArgs.opt.quiet) {
                     std::cout << "Starting..." << std::endl;
                 }
@@ -397,4 +468,107 @@ int cmd::run(const args::Args &cliArgs) {
             << std::endl;
     }
     return 1;
+}
+
+int cmd::backup(const args::Args &cliArgs) {
+    // Make sure ~/Applications exists
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
+    if (!std::filesystem::exists(path.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "No such ~/Applications!" << std::endl;
+        }
+        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
+            std::cout << "Created ~/Applications" << std::endl;
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr <<  "Failed to create ~/Applications";
+            }
+            return 1;
+        }
+    }
+
+    // TODO: Ask before making backup
+
+    std::stringstream backupPath;
+    backupPath << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz";
+    if (std::remove(backupPath.str().c_str()) == 0) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "Removed old backup." << std::endl;
+        }
+    } else {
+        if (!cliArgs.opt.quiet) {
+            std::cerr << "Failed to remove old backup." << std::endl;
+        }
+        return 1;
+    }
+    std::stringstream tarCmd;
+    tarCmd
+        << "tar cvfz " << backupPath.str() << " "
+        << std::string(std::getenv("HOME")) << "/Applications/*.AppImage";
+    return system(tarCmd.str().c_str());
+}
+
+int cmd::restore(const args::Args &cliArgs) {
+    // Make sure ~/Applications exists
+    std::stringstream path;
+    path << std::string(std::getenv("HOME")) << "/Applications";
+    if (!std::filesystem::exists(path.str())) {
+        if (!cliArgs.opt.quiet) {
+            std::cout << "No such ~/Applications!" << std::endl;
+        }
+        if (std::filesystem::create_directory(path.str()) && !cliArgs.opt.quiet) {
+            std::cout << "Created ~/Applications" << std::endl;
+        } else {
+            if (!cliArgs.opt.quiet) {
+                std::cerr <<  "Failed to create ~/Applications";
+            }
+            return 1;
+        }
+    }
+
+    if (!cliArgs.opt.quiet) {
+        std::cout << "Removing old packages..." << std::endl;
+    }
+    const auto extension = std::string(".AppImage");
+    try {
+        for (const auto &entry : std::filesystem::directory_iterator(path.str())) {
+            const auto fileName = entry.path().filename().string();
+            if (fileName.length() > extension.length()
+                    && fileName.substr(fileName.length() - extension.length()) == extension) {
+                // Found an installed version
+                if (!cliArgs.opt.quiet) {
+                    std::cout
+                        << "Found application '" << fileName << "' - '"
+                        << fileName << "'."
+                        << std::endl;
+                }
+
+                // TODO: Ask before removal if told to
+
+                if (!cliArgs.opt.quiet) {
+                    std::cout << "Removing..." << std::endl;
+                }
+                if (std::remove(entry.path().c_str()) == 0) {
+                    if (!cliArgs.opt.quiet) {
+                        std::cout << "Successfully removed package." << std::endl;
+                    }
+                } else {
+                    if (!cliArgs.opt.quiet) {
+                        std::cerr << "Failed to remove package." << std::endl;
+                    }
+                    return 1;
+                }
+            }
+        }
+    } catch(...) {
+        if (!cliArgs.opt.quiet) {
+            std::cerr << "Failed to remove." << std::endl;
+        }
+        return 1;
+    }
+
+    std::stringstream tarCmd;
+    tarCmd << "tar xzfv " << std::string(std::getenv("HOME")) << "/.aim-backup.tar.gz -C /";
+    return system(tarCmd.str().c_str());
 }

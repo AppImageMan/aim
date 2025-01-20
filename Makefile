@@ -63,6 +63,10 @@ $(APPDIR)/usr/bin/$(OBJNAME): $(OBJNAME)
 	mkdir -p $(APPDIR)/usr/bin
 	cp $< $@
 
+$(APPDIR)/usr/bin/git: $(OBJNAME)
+	mkdir -p $(APPDIR)/usr/bin
+	cp /usr/bin/git $@
+
 $(APPDIR)/$(OBJNAME).desktop: $(OBJNAME).desktop
 	mkdir -p $(APPDIR)
 	cp $< $@
@@ -84,7 +88,7 @@ $(OBJNAME): $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
 ifdef RELEASE
-$(OBJNAME)-x86_64.AppImage: $(AITOOL) $(APPDIR)/usr/bin/$(OBJNAME) $(APPDIR)/$(OBJNAME).desktop $(APPDIR)/$(OBJNAME).svg $(APPDIR)/AppRun
+$(OBJNAME)-x86_64.AppImage: $(AITOOL) $(APPDIR)/usr/bin/$(OBJNAME) $(APPDIR)/usr/bin/git $(APPDIR)/$(OBJNAME).desktop $(APPDIR)/$(OBJNAME).svg $(APPDIR)/AppRun
 	./$(AITOOL) --appimage-extract-and-run $(APPDIR)
 
 /realworld/$(OBJNAME).AppImage: $(OBJNAME)-x86_64.AppImage
