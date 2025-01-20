@@ -105,8 +105,7 @@
                 "exec",
                 "aim-dev",
                 "make",
-                "RELEASE=1",
-                "-j16"
+                "RELEASE=1"
             ],
             "dependsOn": [
                 "dockerCopySrc"
